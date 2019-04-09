@@ -1,12 +1,13 @@
 import { combineReducers } from "redux";
 import show from './showReducer';
-import  check from "./checkReducer";
 import manager from './managerReducer';
+import sort from './sortReducer';
+import search from './searchReducer';
 const reducers = combineReducers({
 show,
-check,
 manager,
-
+sort,
+search
 });
 
 export default reducers;

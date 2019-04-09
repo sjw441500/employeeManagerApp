@@ -62,6 +62,7 @@ class Edit  extends Component{
 
   };
   handleDateChange = e => {
+    console.log(e.target.value);
     this.setState({startDate: e.target.value});
 
   };
@@ -84,16 +85,15 @@ class Edit  extends Component{
         }
       )
       .then(response=>{
-        //dispatch(addSuccess()) 
         this.props.history.push('/');
       })
       .catch(err=>{
-        // dispatch(addtFail(err));
             alert(err);
       }) 
 
     };
     render(){
+      let warning ={color:"red"};
       const {manager} = this.props;
       let managerUI;
       if(manager.isFetching){
@@ -117,12 +117,14 @@ class Edit  extends Component{
         managerUI = <Form.Group controlId="manager">
         <Form.Label>Manager:</Form.Label>
         <select onChange={this.handleManagerChange}>
-        {this.state.oldManager?<option value ={this.state.oldManager} selected>{this.state.oldManagerName}</option>
-        :<option value ={null} selected >none</option>}
-        
-    
+        {this.state.oldManager&&
+        <option value ={this.state.oldManager} selected>{this.state.oldManagerName}</option>
+        }
+        :<option value ={null} >none</option>
     {
-      this.props.manager.data.map( m=>{
+      manager.data.sort((a,b)=>{
+     return a.name.localeCompare(b.name);
+      }).map( m=>{
         if(m._id !== this.state.oldManager)
   return <option key ={m._id} value ={m._id}>{m.name}</option>
 } )
@@ -146,7 +148,7 @@ console.log(this.props.manager)
       </Form.Group>
       }
 return(
-<Form onSubmit = {this.handleSubmit}>
+<Form onSubmit = {this.handleSubmit} style={{width:200,margin:"20px auto"}}>
 <Form.Group controlId="photo">
     {this.state.photo == null ? (
               <img height="160px" alt="default avatar" src={image} />
@@ -163,10 +165,16 @@ return(
 <Form.Group controlId="name">
     <Form.Label>Name:</Form.Label>
     <Form.Control type="name" placeholder={this.state.name} onChange={this.handleNameChange}/>
+    {!/^[A-Za-z]+([\ A-Za-z]+)*/.test(this.state.name)
+    && this.state.name
+      &&(<p style={warning}>invalid name </p>)}
   </Form.Group>
   <Form.Group controlId="title">
     <Form.Label>Title</Form.Label>
     <Form.Control type="title" placeholder={this.state.title} onChange={this.handleTitleChange}/>
+    {!/^[a-zA-Z]+$/.test(this.state.title)
+    && this.state.title
+      &&(<p style={warning}>invalid title </p>)}
   </Form.Group>
   <Form.Group controlId="sex">
     <Form.Label inline="true">sex:</Form.Label>
@@ -186,18 +194,30 @@ return(
   <Form.Group controlId="officePhone">
     <Form.Label>Office Phone</Form.Label>
     <Form.Control type="officePhone" placeholder={this.state.officePhone} onChange={this.handleOfficePhoneChange}/>
+    {!/^\d{10}$/.test(this.state.officePhone)
+    &&this.state.officePhone
+      &&(<p style={warning}>invalid office phone:please input 10 digits number</p>)}
   </Form.Group>
   <Form.Group controlId="cellPhone">
     <Form.Label>Cell Phone</Form.Label>
     <Form.Control type="title" placeholder={this.state.cellPhone} onChange={this.handleCellPhoneChange}/>
+    {!/^\d{10}$/.test(this.state.cellPhone)
+    &&this.state.cellPhone
+      &&(<p style={warning}>invalid cell phone:please input 10 digits number</p>)}
   </Form.Group>
   <Form.Group controlId="sms">
     <Form.Label>SMS</Form.Label>
     <Form.Control type="sms" placeholder={this.state.sms} onChange={this.handleSMSChange}/>
+    {!/^\d{10}$/.test(this.state.sms)
+    &&this.state.sms
+      &&(<p style={warning}>invalid sms:please input 10 digits number</p>)}
   </Form.Group>
   <Form.Group controlId="email">
     <Form.Label>Email:</Form.Label>
     <Form.Control type="email" placeholder={this.state.email} onChange={this.handleEmailChange} />
+    {!/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(this.state.email)
+    && this.state.email&&
+    (<p style={warning}>invalid email:please input valid email</p>)}
   </Form.Group>
 {managerUI}
   <Link to ="/">
@@ -205,7 +225,24 @@ return(
     Back
   </Button>
   </Link>
-  <Button variant="primary" type="submit">
+  <Button variant="primary" type="submit"
+    disabled={
+      !/^\d{10}$/.test(this.state.sms)||
+      !/^\d{10}$/.test(this.state.officePhone)||
+      !/^\d{10}$/.test(this.state.cellPhone)||
+      !/^[A-Za-z]+([\ A-Za-z]+)*$/.test(this.state.name)||
+      !/^[a-zA-Z]+$/.test(this.state.title)||
+      !/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(this.state.email)||
+      !/^(male|female)$/.test(this.state.sex.toLocaleLowerCase())||
+         !this.state.name||
+        !this.state.sex||
+        !this.state.title||
+        !this.state.startDate||
+        !this.state.officePhone||
+        !this.state.cellPhone||
+        !this.state.sms||
+        !this.state.email
+    }>
     Submit
   </Button>
 

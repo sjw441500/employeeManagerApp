@@ -25,7 +25,7 @@ ul {
   background-color: lightgrey;
 }
 
-img {
+img.show-img{
   border-radius: 50%;
   width: 70px;
   height: 70px;
@@ -41,6 +41,10 @@ img {
   font-size: 1.2em;
   color: rgb(71, 71, 240);
 }
+/* 
+.sortable {
+  cursor: pointer;
+} */
 
 #li-arrow {
   position: relative;

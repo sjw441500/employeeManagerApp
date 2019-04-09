@@ -1,4 +1,4 @@
-const show = (state={err:null,isFetching:false,isAdding:false,data:[],match:[]},action)=>{
+const show = (state={err:null,isFetching:false,isAdding:false,data:[]},action)=>{
 
     switch(action.type){
         case 'EMPLOYEE_FETCH_START':
@@ -21,13 +21,6 @@ const show = (state={err:null,isFetching:false,isAdding:false,data:[],match:[]},
                 data: action.data,
                 //searchedData:action.data,
               }) 
-        }
-
-        case "GET_MANAGER_DETAIL":{
-          return{
-            ...state,
-            match:[action._id]
-          }
         }
         case 'EMPLOYEE_ADD_START':
         return( {

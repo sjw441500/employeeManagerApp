@@ -46,6 +46,7 @@ class Add extends Component{
 
   };
   handleDateChange = e => {
+    console.log(e.target.value);
     this.setState({startDate: e.target.value});
 
   };
@@ -98,8 +99,10 @@ class Add extends Component{
 
       };
     render(){
+      let warning ={color:"red"};
 return(
-<Form onSubmit = {this.handleSubmit} style={{width:200}}>
+
+<Form onSubmit = {this.handleSubmit} style={{width:200,margin:"20px auto"}}>
 <Form.Group controlId="photo">
     {this.state.photo === null ? (
               <img height="160px" alt="default avatar" src={image} />
@@ -116,10 +119,16 @@ return(
 <Form.Group controlId="name">
     <Form.Label>Name:</Form.Label>
     <Form.Control type="name" placeholder="name" onChange={this.handleNameChange}/>
+    {!/^[A-Za-z]+([\ A-Za-z]+)*$/.test(this.state.name)
+    && this.state.name
+      &&(<p style={warning}>invalid name </p>)}
   </Form.Group>
   <Form.Group controlId="title">
     <Form.Label>Title</Form.Label>
     <Form.Control type="title" placeholder="title" onChange={this.handleTitleChange}/>
+    {!/^[a-zA-Z]+$/.test(this.state.title)
+    && this.state.title
+      &&(<p style={warning}>invalid title </p>)}
   </Form.Group>
   <Form.Group controlId="sex">
     <Form.Label inline="true">sex:</Form.Label>
@@ -139,29 +148,42 @@ return(
   <Form.Group controlId="officePhone">
     <Form.Label>Office Phone</Form.Label>
     <Form.Control type="officePhone" placeholder="office Phone" onChange={this.handleOfficePhoneChange} />
+    {!/^\d{10}$/.test(this.state.officePhone)
+    &&this.state.officePhone
+      &&(<p style={warning}>invalid office phone:please input 10 digits number</p>)}
   </Form.Group>
   <Form.Group controlId="cellPhone">
     <Form.Label>Cell Phone</Form.Label>
     <Form.Control type="title" placeholder="cell Phone" onChange={this.handleCellPhoneChange}/>
+    {!/^\d{10}$/.test(this.state.cellPhone)
+    &&this.state.cellPhone
+      &&(<p style={warning}>invalid cell phone:please input 10 digits number</p>)}
   </Form.Group>
   <Form.Group controlId="sms">
     <Form.Label>SMS</Form.Label>
     <Form.Control type="sms" placeholder="SMS"onChange={this.handleSMSChange} />
+    {!/^\d{10}$/.test(this.state.sms)
+    &&this.state.sms
+      &&(<p style={warning}>invalid sms:please input 10 digits number</p>)}
   </Form.Group>
   <Form.Group controlId="email">
     <Form.Label>Email:</Form.Label>
     <Form.Control type="email" placeholder="Email" onChange={this.handleEmailChange}/>
+    {!/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(this.state.email)
+    && this.state.email&&
+    (<p style={warning}>invalid email:please input valid email</p>)}
   </Form.Group>
   <Form.Group controlId="manager">
     <Form.Label>Manager:</Form.Label>
 <select onChange={this.handleManagerChange}>
 <option value ={null}>None</option>
 {
-  this.props.all.map( manager=>{
+  this.props.all.sort((a,b)=>{
+    return a.name.localeCompare(b.name);
+     }).map( manager=>{
   return <option key ={manager._id} value ={manager._id}>{manager.name}</option>
 } )
 }
-  
   
   </select>
   </Form.Group>
@@ -170,7 +192,24 @@ return(
     Back
   </Button>
   </Link>
-  <Button variant="primary" type="submit">
+  <Button variant="primary" type="submit"
+  disabled={
+    !/^\d{10}$/.test(this.state.sms)||
+    !/^\d{10}$/.test(this.state.officePhone)||
+    !/^\d{10}$/.test(this.state.cellPhone)||
+    !/^[A-Za-z]+([\ A-Za-z]+)*$/.test(this.state.name)||
+    !/^[a-zA-Z]+$/.test(this.state.title)||
+    !/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(this.state.email)||
+    !/^(male|female)$/.test(this.state.sex.toLocaleLowerCase())||
+       !this.state.name||
+      !this.state.sex||
+      !this.state.title||
+      !this.state.startDate||
+      !this.state.officePhone||
+      !this.state.cellPhone||
+      !this.state.sms||
+      !this.state.email
+  }>
     Submit
   </Button>
 </Form>

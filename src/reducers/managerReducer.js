@@ -1,5 +1,3 @@
-import { CastError } from "mongoose";
-
 const manager = (state = {err:null,isFetching:false,data:[]},action)=>{
 
     switch(action.type){

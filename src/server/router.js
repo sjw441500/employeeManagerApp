@@ -10,18 +10,134 @@ router.get('/employees',(req,res) =>{
     employee.find({},(err,employees)=>{
         if(err)
         res.status(500).send(err);
+        else
         res.status(200).json(employees);
     })
 });
+
+router.get('/employees/getMore/:curPage/:itemPerPage/:sortBy/:order',(req,res)=>{
+ 
+    
+    var curPage=parseInt( req.params.curPage);
+    var itemPerPage=parseInt(req.params.itemPerPage);
+    var sortBy=req.params.sortBy;
+    var order=req.params.order;
+    console.log(`get page ${curPage} with ${itemPerPage} items per page sort by ${sortBy} with ${order} order`);
+    if(sortBy==="null"|| order==="null"){
+    employee.find({})
+    .skip((curPage-1)*itemPerPage)
+    .limit(itemPerPage)
+    .then(data=>{
+        res.status(200).json(data);
+    }).catch(err=>{
+        res.status(500).send(err);
+    });
+}
+else{
+    if(order ==="ascending"){
+        let obj={};
+        obj[sortBy]=1;
+        employee.find().sort(obj)
+        .skip((curPage-1)*itemPerPage)
+        .limit(itemPerPage)
+        .then(data=>{
+            res.status(200).json(data);
+        }).catch(err=>{
+            res.status(500).send(err);
+        });
+    }
+    else if(order ==="descending"){
+        let obj={};
+        obj[sortBy]=-1;
+        employee.find().sort(obj)
+        .skip((curPage-1)*itemPerPage)
+        .limit(itemPerPage)
+        .then(data=>{
+            res.status(200).json(data);
+        }).catch(err=>{
+            res.status(500).send(err);
+        });
+
+    }
+    else{
+        res.status(500).send({err:"illegal order"});
+
+    }
+}
+})
 
 router.get('/employees/:employee_id',(req,res) =>{
     var employee_id = req.params.employee_id;
     employee.findById(employee_id,(err,result) =>{
         if(err)
         res.status(500).send(err);
+        else
+        res.status(200).json([result]);
+    })
+});
+
+router.post('/directReports',(req,res) =>{
+    const list = req.body.list;
+  
+    employee.find({_id:{$in:list}},(err,result) =>{
+        if(err)
+        res.status(500).send(err);
+        else
         res.status(200).json(result);
     })
 });
+
+router.post('/search',(req,res)=>{
+    const search = req.body.search;
+    var pre = "^.*";
+    var pos = ".*$";
+    console.log("search content : "+search);
+
+    if(/^\d+$/.test(search)){
+        // search = parseInt(search);
+        
+
+        employee.find({$or:[
+            
+            {officePhone:{$regex:new RegExp(pre+search+pos,'i')} },
+            {cellPhone:{$regex:new RegExp(pre+search+pos,'i')} },
+            {sms:{$regex:new RegExp(pre+search+pos,'i')} },
+            {startDate:{$regex:new RegExp(pre+search+pos,'i')} },
+        ]},(err,data)=>{
+            if(err){
+                console.log(err);
+                res.status(500).send(err);
+            }
+            else
+                res.status(200).json(data);
+            
+        })
+    }
+    else{
+    
+        employee.find({$or:[
+            {name:{$regex:new RegExp(pre+search+pos,'i')} },
+            {title:{$regex:new RegExp(pre+search+pos,'i')} },
+            {sex:{$regex:new RegExp(pre+search+pos,'i')} },
+            {startDate:{$regex:new RegExp(pre+search+pos,'i')} },
+            {email:{$regex:new RegExp(pre+search+pos,'i')} },
+            {managerName:{$regex:new RegExp(pre+search+pos,'i')} },
+        ]},(err,data)=>{
+            if(err){
+                console.log(err);
+                res.status(500).send(err);
+            }
+            
+            else
+                res.status(200).json(data);
+            
+        })
+
+
+    }
+
+   
+})
 
 router.get('/valids/:employeeId',(req,res) =>{
     var employeeId=req.params.employeeId;
@@ -30,7 +146,7 @@ router.get('/valids/:employeeId',(req,res) =>{
         res.status(500).send(err);
         else if(data!==null){
             if(data.reportList.length>0){
-                var myEventEmitter = new events.EventEmitter();
+           
                 var invalid = [];
                 var ans =[employeeId];
                 async function asynWhile(){
@@ -44,12 +160,12 @@ router.get('/valids/:employeeId',(req,res) =>{
                           });
                           //console.log(ans.length);    
                     }
-                    console.log(invalid);
+
                     employee.find({_id:{$nin:[...invalid]}},(err,valids)=>{
                         if(err)
                         res.status(500).send(err);
                         else{
-                            console.log(valids.map(d=>d._doc));
+                            console.log("get all valids managers",valids.map(d=>d._doc));
                         res.status(200).json({data:valids.map(d=>d._doc)});
                         }
                         
@@ -88,7 +204,7 @@ router.get('/valids/:employeeId',(req,res) =>{
                     if(err)
                     res.status(500).send(err);
                     else{
-                        console.log(valids.map(d=>d._doc));
+                        console.log("get all valids managers",valids.map(d=>d._doc));
                     res.status(200).json({data:valids.map(d=>d._doc)});
                 }
 
@@ -148,11 +264,33 @@ router.put('/employees/:employeeId',(req,res)=>{
             if(err)
             res.status(500).json({ error: err });
             else{
+
                 employee.findByIdAndUpdate(managerId,{$push:{reportList:employeeId}},(err,e)=>{
                     if(err)
                     res.status(500).json({ error: err });
                     else{
-                        res.status(200).json({data:e}); 
+                        employee.findById(employeeId,{reportList:1},(err,list)=>{
+                            if(err)
+                            res.status(500).json({ error: err });
+                            else{
+                               if(list.reportList.length > 0){
+                                   employee.update({_id:{$in:list.reportList}},
+                                    {$set:{managerName:name}},
+                                    {multi:true,upsert:false},(err,raw)=>{
+                                        if(err)
+                                        res.status(500).json({ error: err });
+                                        else
+                                        res.status(200).json({data:raw}); 
+
+                                    })
+                               }
+                     
+                            else{
+                                res.status(200).json({data:list}); 
+                            }
+                            }
+                        })
+                      
                     }
 
                 })
@@ -169,7 +307,27 @@ router.put('/employees/:employeeId',(req,res)=>{
                         if(err)
                         res.status(500).json({ error: err });
                         else{
-                            res.status(200).json({data:e}); 
+                            employee.findById(employeeId,{reportList:1},(err,list)=>{
+                                if(err)
+                                res.status(500).json({ error: err });
+                                else{
+                                   if(list.reportList.length > 0){
+                                       employee.update({_id:{$in:list.reportList}},
+                                        {$set:{managerName:name}},
+                                        {multi:true,upsert:false},(err,raw)=>{
+                                            if(err)
+                                            res.status(500).json({ error: err });
+                                            else
+                                            res.status(200).json({data:raw}); 
+    
+                                        })
+                                   }
+                         
+                                else{
+                                    res.status(200).json({data:list}); 
+                                }
+                                }
+                            })
                         }
                     });
                 }
@@ -182,7 +340,27 @@ router.put('/employees/:employeeId',(req,res)=>{
             if(err)
             res.status(500).json({ error: err });
             else{
-                res.status(200).json({data}); 
+                employee.findById(employeeId,{reportList:1},(err,list)=>{
+                    if(err)
+                    res.status(500).json({ error: err });
+                    else{
+                       if(list.reportList.length > 0){
+                           employee.update({_id:{$in:list.reportList}},
+                            {$set:{managerName:name}},
+                            {multi:true,upsert:false},(err,raw)=>{
+                                if(err)
+                                res.status(500).json({ error: err });
+                                else
+                                res.status(200).json({data:raw}); 
+
+                            })
+                       }
+             
+                    else{
+                        res.status(200).json({data:list}); 
+                    }
+                    }
+                })
             }
         })
         
@@ -201,8 +379,29 @@ router.put('/employees/:employeeId',(req,res)=>{
                         employee.findByIdAndUpdate(managerId,{$push:{reportList:employeeId}},(err,data)=>{
                             if(err)
                             res.status(500).json({ error: err });
-                            else
-                            res.status(200).json({data}); 
+                            else{
+                                employee.findById(employeeId,{reportList:1},(err,list)=>{
+                                    if(err)
+                                    res.status(500).json({ error: err });
+                                    else{
+                                       if(list.reportList.length > 0){
+                                           employee.update({_id:{$in:list.reportList}},
+                                            {$set:{managerName:name}},
+                                            {multi:true,upsert:false},(err,raw)=>{
+                                                if(err)
+                                                res.status(500).json({ error: err });
+                                                else
+                                                res.status(200).json({data:raw}); 
+        
+                                            })
+                                       }
+                             
+                                    else{
+                                        res.status(200).json({data:list}); 
+                                    }
+                                    }
+                                })
+                            }
                             
                         })
                     }

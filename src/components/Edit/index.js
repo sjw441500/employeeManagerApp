@@ -17,6 +17,7 @@ class Edit  extends Component{
     constructor(props){
         super(props);
         this.state = {
+          // pass para from router link with path ={path:,state:{}}
           ...props.location.state,
           oldManager:props.location.state.managerId,
           oldManagerName:props.location.state.managerName

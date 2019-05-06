@@ -33,6 +33,8 @@ class Add extends Component{
   componentDidMount(){
     this.props.getManager();
   }
+
+  // photo load handling with promise
   handlePhotoChange = e => {
     if (e.target.value) {
       let file = e.target.files[0];
